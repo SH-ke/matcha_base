@@ -2,7 +2,10 @@
 test
 train
 benetech-making-graphs-accessible
+
+# 预训练模型
 archive
+models
 
 # 二进制文件
 *.jpg
