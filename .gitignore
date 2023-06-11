@@ -1,0 +1,13 @@
+# 数据集
+test
+train
+benetech-making-graphs-accessible
+archive
+
+# 二进制文件
+*.jpg
+*.bin
+*.model
+
+# jupyter notebook
+*.ipynb
