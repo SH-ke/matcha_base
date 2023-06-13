@@ -10,3 +10,6 @@ transformers
 jupyter
 ipykernel
 datasets
+opencv-python
+matplotlib
+albumentations

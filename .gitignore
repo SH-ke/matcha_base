@@ -2,6 +2,7 @@
 test
 train
 benetech-making-graphs-accessible
+data.json
 
 # 预训练模型
 archive
@@ -11,6 +12,10 @@ models
 *.jpg
 *.bin
 *.model
+*.pt
 
 # jupyter notebook
 *.ipynb
+
+# 忽略已编译的 Python 文件
+*.pyc
