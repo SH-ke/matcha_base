@@ -1,11 +1,9 @@
-import numpy as np
-import pandas as pd
+# import numpy as np
+# import pandas as pd
 from tqdm.auto import tqdm
-import matplotlib.pyplot as plt
+from random import shuffle
 import os, sys, cv2, json, glob, csv
 from log_stdout import *
-
-from random import shuffle
 
 # import wandb
 import torch
@@ -28,7 +26,7 @@ warnings.simplefilter("ignore")
 
 # %%
 Config = {
-    'IMAGE_DIR': '/kaggle/input/benetech-making-graphs-accessible/train/images/',
+    'IMAGE_DIR': '/models/benetech-making-graphs-accessible/train/images/',
     
     'MAX_PATCHES': 1024,
     'MODEL_NAME': 'google/matcha-base',
@@ -41,48 +39,6 @@ Config = {
     'ALL_SAMPLES': int(1e+100),
     '_wandb_kernel': 'tanaym',
 }
-
-# %% [markdown]
-# ### About W&B:
-# <center><img src="https://i.imgur.com/gb6B4ig.png" width="400" alt="Weights & Biases"/></center><br>
-# <p style="text-align:center">WandB is a developer tool for companies turn deep learning research projects into deployed software by helping teams track their models, visualize model performance and easily automate training and improving models.
-# We will use their tools to log hyperparameters and output metrics from your runs, then visualize and compare results and quickly share findings with your colleagues.<br><br></p>
-
-# %% [markdown]
-# To login to W&B, you can use below snippet.
-# 
-# ```python
-# from kaggle_secrets import UserSecretsClient
-# user_secrets = UserSecretsClient()
-# wb_key = user_secrets.get_secret("WANDB_API_KEY")
-# 
-# wandb.login(key=wb_key)
-# ```
-# Make sure you have your W&B key stored as `WANDB_API_KEY` under Add-ons -> Secrets
-# 
-# You can view [this](https://www.kaggle.com/ayuraj/experiment-tracking-with-weights-and-biases) notebook to learn more about W&B tracking.
-# 
-# If you don't want to login to W&B, the kernel will still work and log everything to W&B in anonymous mode.
-
-# %%
-# def wandb_log(**kwargs):
-#     for k, v in kwargs.items():
-#         wandb.log({k: v})
-
-# # Start W&B logging
-# # W&B Login
-# from kaggle_secrets import UserSecretsClient
-# user_secrets = UserSecretsClient()
-# wb_key = user_secrets.get_secret("WANDB_API_KEY")
-
-# wandb.login(key=wb_key)
-
-# run = wandb.init(
-#     project='pytorch',
-#     config=Config,
-#     group='multi_modal',
-#     job_type='train',
-# )
 
 # %%
 # Let's add chart types as special tokens and a special BOS token
@@ -199,16 +155,13 @@ def collator(batch):
     return new_batch
 
 # %%
-def train_one_epoch(model, processor, train_loader, optimizer, scaler):
+def train_one_epoch(model, processor, train_loader, optimizer, scaler, __logger):
     """
     Trains the model on all batches for one epoch with NVIDIA's AMP
     """
     model.train()
     avg_loss = 0
     with autocast():
-        setup_logging('epoch')
-        __logger = logging.getLogger('logger')
-        __logger.setLevel(logging.DEBUG)
         for idx, batch in tqdm(enumerate(train_loader), unit_scale=True, dynamic_ncols=True, file=sys.stdout):
             labels = batch.pop("labels").to('cuda')
             flattened_patches = batch.pop("flattened_patches").to('cuda')
@@ -236,7 +189,7 @@ def train_one_epoch(model, processor, train_loader, optimizer, scaler):
     return avg_loss
 
 @torch.no_grad()
-def valid_one_epoch(model, processor, valid_loader):
+def valid_one_epoch(model, processor, valid_loader, __logger):
     """
     Validates the model on all batches (in val set) for one epoch
     """
@@ -261,6 +214,7 @@ def valid_one_epoch(model, processor, valid_loader):
         
     avg_loss = avg_loss / len(valid_loader)
     print(f"Average validation loss: {avg_loss:.4f}")
+    __logger.info(f"Average validation loss: {avg_loss:.4f}")
     # wandb_log(val_loss=avg_loss)
     return avg_loss
 
@@ -274,6 +228,9 @@ def fit(model, processor, train_loader, valid_loader, optimizer, scaler):
                                                     datetime.datetime.utcnow().isoformat().replace(":", "-"))
     with open(__csv_file_name, mode='a', newline='') as f:
         for epoch in range(Config['NB_EPOCHS']):
+            setup_logging('epoch')
+            __logger = logging.getLogger('logger')
+            __logger.setLevel(logging.DEBUG)
             csvw = csv.writer(f)
             print(epoch)
         
@@ -282,16 +239,20 @@ def fit(model, processor, train_loader, valid_loader, optimizer, scaler):
                 csvw.writerow(["EPOCH", "AVG_LOSS"])
                 print(["EPOCH", "AVG_LOSS"])
             # print(f"{'='*20} Epoch: {epoch+1} / {Config['NB_EPOCHS']} {'='*20}")
-            _ = train_one_epoch(model, processor, train_loader, optimizer, scaler)
-            val_avg_loss = valid_one_epoch(model, processor, valid_loader)
+            _ = train_one_epoch(model, processor, train_loader, optimizer, scaler, __logger)
+            val_avg_loss = valid_one_epoch(model, processor, valid_loader, __logger)
+            val_avg_loss = 12
             csvw.writerow([epoch, val_avg_loss])
+            __logger.info('epoch: {}, val_avg_loss: {}'.format(epoch, val_avg_loss))
             print([epoch, val_avg_loss])
         
         if val_avg_loss < best_val_loss:
             best_val_loss = val_avg_loss
             print(f"Saving best model so far with loss: {best_val_loss:.4f}")
-            torch.save(model.state_dict(), f"pix2struct_base_benetech.pt")
+            __logger.info(f"Saving best model so far with loss: {best_val_loss:.4f}")
+            torch.save(model.state_dict(), f"./models/ckpt/best_{best_val_loss}.pt")
     print(f"Best model with val_loss: {best_val_loss:.4f}")
+    __logger.info(f"Best model with val_loss: {best_val_loss:.4f}")
 
 # %%
 # Training cell
@@ -337,17 +298,4 @@ if __name__ == "__main__":
         optimizer=optimizer,
         scaler=GradScaler(),
     )
-
-# %% [markdown]
-# 
-
-# %%
-# Once training is done, 
-# wandb.finish()
-
-# %% [markdown]
-# <center>
-# <img src="https://img.shields.io/badge/Upvote-If%20you%20like%20my%20work-07b3c8?style=for-the-badge&logo=kaggle">
-# </center>
-
 
