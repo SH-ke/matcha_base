@@ -1,11 +1,8 @@
-# import numpy as np
-# import pandas as pd
 from tqdm.auto import tqdm
 from random import shuffle
 import os, sys, cv2, json, glob, csv
 from log_stdout import *
 
-# import wandb
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader, Dataset
@@ -34,10 +31,11 @@ Config = {
     'MAX_LEN': 256,
     'LR': 3e-5,
     'NB_EPOCHS': 20,
-    'TRAIN_BS': 3,
-    'VALID_BS': 3,
+    'TRAIN_BS': 4,
+    'VALID_BS': 4,
     'ALL_SAMPLES': int(1e+100),
     '_wandb_kernel': 'tanaym',
+    "start_epoch": 2
 }
 
 # %%
@@ -227,30 +225,33 @@ def fit(model, processor, train_loader, valid_loader, optimizer, scaler):
     __csv_file_name = "./loggings/{}-{}_log_file.csv".format("avg_loss",
                                                     datetime.datetime.utcnow().isoformat().replace(":", "-"))
     with open(__csv_file_name, mode='a', newline='') as f:
-        for epoch in range(Config['NB_EPOCHS']):
+        start_epoch = Config["start_epoch"]
+        if start_epoch == 0:
+            print(f"if 0 epoch = {start_epoch}")
+            csvw.writerow(["EPOCH", "AVG_LOSS"])
+            print(["EPOCH", "AVG_LOSS"])
+        else :
+            model.load_state_dict(torch.load(f"./models/ckpt/epoch_{start_epoch}.pt"))
+            __logger.info(f"load ckpt model ./models/ckpt/epoch_{start_epoch}.pt")
+
+        for epoch in range(start_epoch+1, Config['NB_EPOCHS']):
             setup_logging('epoch')
             __logger = logging.getLogger('logger')
             __logger.setLevel(logging.DEBUG)
             csvw = csv.writer(f)
             print(epoch)
-        
-            if epoch == 0:
-                print(f"if 0 epoch = {epoch}")
-                csvw.writerow(["EPOCH", "AVG_LOSS"])
-                print(["EPOCH", "AVG_LOSS"])
             # print(f"{'='*20} Epoch: {epoch+1} / {Config['NB_EPOCHS']} {'='*20}")
             _ = train_one_epoch(model, processor, train_loader, optimizer, scaler, __logger)
             val_avg_loss = valid_one_epoch(model, processor, valid_loader, __logger)
-            val_avg_loss = 12
             csvw.writerow([epoch, val_avg_loss])
             __logger.info('epoch: {}, val_avg_loss: {}'.format(epoch, val_avg_loss))
             print([epoch, val_avg_loss])
-        
-        if val_avg_loss < best_val_loss:
-            best_val_loss = val_avg_loss
-            print(f"Saving best model so far with loss: {best_val_loss:.4f}")
-            __logger.info(f"Saving best model so far with loss: {best_val_loss:.4f}")
-            torch.save(model.state_dict(), f"./models/ckpt/best_{best_val_loss}.pt")
+            state_dict = model.state_dict()
+            torch.save(state_dict , f"./models/ckpt/epoch_{epoch}.pt")
+            if val_avg_loss < best_val_loss:
+                best_val_loss = val_avg_loss
+                __logger.info(f"Saving best model so far with loss: {best_val_loss:.4f}")
+                torch.save(model.state_dict(), f"./models/ckpt/best_{epoch}_{best_val_loss}.pt")
     print(f"Best model with val_loss: {best_val_loss:.4f}")
     __logger.info(f"Best model with val_loss: {best_val_loss:.4f}")
 
