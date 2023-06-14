@@ -28,7 +28,7 @@ Config = {
     'MAX_PATCHES': 1024,
     'MODEL_NAME': 'google/matcha-base',
     'IMG_SIZE': (256, 256),
-    'MAX_LEN': 256,
+    'MAX_LEN': 512,
     'LR': 3e-5,
     'NB_EPOCHS': 20,
     'TRAIN_BS': 4,
@@ -223,7 +223,10 @@ def fit(model, processor, train_loader, valid_loader, optimizer, scaler):
     """
     best_val_loss = int(1e+5)
     __csv_file_name = "./loggings/{}-{}_log_file.csv".format("avg_loss",
-                                                    datetime.datetime.utcnow().isoformat().replace(":", "-"))
+                                            datetime.datetime.utcnow().isoformat().replace(":", "-"))
+    setup_logging('epoch')
+    __logger = logging.getLogger('logger')
+    __logger.setLevel(logging.DEBUG)
     with open(__csv_file_name, mode='a', newline='') as f:
         start_epoch = Config["start_epoch"]
         if start_epoch == 0:
@@ -235,9 +238,6 @@ def fit(model, processor, train_loader, valid_loader, optimizer, scaler):
             __logger.info(f"load ckpt model ./models/ckpt/epoch_{start_epoch}.pt")
 
         for epoch in range(start_epoch+1, Config['NB_EPOCHS']):
-            setup_logging('epoch')
-            __logger = logging.getLogger('logger')
-            __logger.setLevel(logging.DEBUG)
             csvw = csv.writer(f)
             print(epoch)
             # print(f"{'='*20} Epoch: {epoch+1} / {Config['NB_EPOCHS']} {'='*20}")
