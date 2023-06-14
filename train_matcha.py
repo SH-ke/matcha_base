@@ -36,8 +36,8 @@ Config = {
     'MAX_LEN': 256,
     'LR': 3e-5,
     'NB_EPOCHS': 20,
-    'TRAIN_BS': 6,
-    'VALID_BS': 6,
+    'TRAIN_BS': 3,
+    'VALID_BS': 3,
     'ALL_SAMPLES': int(1e+100),
     '_wandb_kernel': 'tanaym',
 }

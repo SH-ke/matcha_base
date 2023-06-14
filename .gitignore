@@ -19,3 +19,7 @@ models
 
 # 忽略已编译的 Python 文件
 *.pyc
+
+# 日志目录
+loggings
+*.ps1

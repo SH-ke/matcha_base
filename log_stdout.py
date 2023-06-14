@@ -13,7 +13,7 @@ def setup_logging(log_prefix):
     if __is_setup_done:
         pass
     else:
-        __log_file_name = "./loggings/{}-{}_log_file.txt".format(log_prefix,
+        __log_file_name = "./loggings/{}-{}_log_file.log".format(log_prefix,
                                                       datetime.datetime.utcnow().isoformat().replace(":", "-"))
 
         __log_format = '%(asctime)s - %(name)-30s - %(levelname)s - %(message)s'
@@ -52,12 +52,15 @@ class TqdmLoggingHandler(logging.StreamHandler):
 
 
 def example_long_procedure():
-    setup_logging('setup')
+    setup_logging('example')
     __logger = logging.getLogger('logger')
     __logger.setLevel(logging.DEBUG)
-    for i in tqdm(range(10), unit_scale=True, dynamic_ncols=True, file=sys.stdout):
-        time.sleep(.1)
+    for i in tqdm(range(1000), unit_scale=True, dynamic_ncols=True, file=sys.stdout):
+        time.sleep(0.5)
         __logger.info('foo {}'.format(i))
+            
+    # 创造 error 报错 
+    import tensorflow as tf
 
 
 if __name__ == "__main__":
