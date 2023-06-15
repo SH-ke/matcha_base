@@ -35,7 +35,7 @@ Config = {
     'VALID_BS': 4,
     'ALL_SAMPLES': int(1e+100),
     '_wandb_kernel': 'tanaym',
-    "start_epoch": 2
+    "start_epoch": 0
 }
 
 # %%
@@ -228,6 +228,7 @@ def fit(model, processor, train_loader, valid_loader, optimizer, scaler):
     __logger = logging.getLogger('logger')
     __logger.setLevel(logging.DEBUG)
     with open(__csv_file_name, mode='a', newline='') as f:
+        csvw = csv.writer(f)
         start_epoch = Config["start_epoch"]
         if start_epoch == 0:
             print(f"if 0 epoch = {start_epoch}")
@@ -238,7 +239,6 @@ def fit(model, processor, train_loader, valid_loader, optimizer, scaler):
             __logger.info(f"load ckpt model ./models/ckpt/epoch_{start_epoch}.pt")
 
         for epoch in range(start_epoch+1, Config['NB_EPOCHS']):
-            csvw = csv.writer(f)
             print(epoch)
             # print(f"{'='*20} Epoch: {epoch+1} / {Config['NB_EPOCHS']} {'='*20}")
             _ = train_one_epoch(model, processor, train_loader, optimizer, scaler, __logger)

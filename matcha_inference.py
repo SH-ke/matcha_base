@@ -59,7 +59,7 @@ model = Pix2StructForConditionalGeneration.from_pretrained("google/matcha-base",
 processor = AutoProcessor.from_pretrained("google/matcha-base",)
 processor.tokenizer.add_tokens(new_tokens)
 model.resize_token_embeddings(len(processor.tokenizer))
-model.load_state_dict(torch.load("./models/ckpt/epoch_2.pt"))
+model.load_state_dict(torch.load("./models/ckpt/epoch_1.pt"))
 
 path = "models/benetech-making-graphs-accessible/test/images/00dcf883a459.jpg"
 image = Image.open(path)
