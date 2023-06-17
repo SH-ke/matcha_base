@@ -23,6 +23,7 @@ models
 # 日志目录
 loggings
 *.ps1
+wandb
 
 # 工作区目录
 .ropeproject

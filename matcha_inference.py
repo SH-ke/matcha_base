@@ -55,11 +55,11 @@ from transformers import AutoProcessor, Pix2StructForConditionalGeneration
 # model = Pix2StructForConditionalGeneration.from_pretrained("archive",ignore_mismatched_sizes=True).to(device)
 model = Pix2StructForConditionalGeneration.from_pretrained("google/matcha-base",ignore_mismatched_sizes=True).to(device)
 
-# model.load_state_dict(torch.load("./models/statista/pytorch_model.bin"))
+# model.load_state_dict(torch.load("./models/pew/pytorch_model.bin"))
+model.load_state_dict(torch.load("./models/ckpt_bak/epoch_2.pt"))
 processor = AutoProcessor.from_pretrained("google/matcha-base",)
 processor.tokenizer.add_tokens(new_tokens)
-model.resize_token_embeddings(len(processor.tokenizer))
-model.load_state_dict(torch.load("./models/ckpt/epoch_1.pt"))
+# model.resize_token_embeddings(len(processor.tokenizer))
 
 path = "models/benetech-making-graphs-accessible/test/images/00dcf883a459.jpg"
 image = Image.open(path)
