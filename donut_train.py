@@ -40,7 +40,7 @@ from datasets import Image as ds_img
 from polyleven import levenshtein 
 
 # %%
-data_dir = Path("kaggle/input/benetech-making-graphs-accessible/train")
+data_dir = Path("models/benetech-making-graphs-accessible/train")
 
 images_path = data_dir / "images"
 train_json_files = list((data_dir / "annotations").glob("*.json"))
@@ -69,7 +69,7 @@ class CFG:
     num_warmup_steps = 100
     seed = 42
     warmup_steps = 300  
-    output_path = "output"
+    output_path = "./models/donut"
     log_steps = 200
     batch_size = 2
     use_wandb = True
@@ -422,6 +422,9 @@ def preprocess(examples: Dict[str, str], processor: DonutProcessor, CFG: CFG) ->
     """
     
     pixel_values = []
+
+
+
 
     texts = examples["ground_truth"]
 

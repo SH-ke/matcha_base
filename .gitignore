@@ -13,6 +13,7 @@ models
 *.bin
 *.model
 *.pt
+*.pth
 
 # jupyter notebook
 *.ipynb

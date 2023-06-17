@@ -1,5 +1,5 @@
 # 设置工作目录
-$env:WS = "E:\Xuke\kaggle\Benetech"
+$WS = "E:\Xuke\kaggle\Benetech"
 
 function Hold-on-PyTask {
     $Trigger = New-ScheduledTaskTrigger -Once -At (Get-Date) -RepetitionInterval (New-TimeSpan -Minutes 1) -RepetitionDuration (New-TimeSpan -Days 365)
@@ -13,25 +13,29 @@ function Kill-PyTask {
 }
 
 function PyTask {
-    download-file
+    # download-file
 
     # 切换到工作目录
-    cd $env:WS
+    cd $WS
 
     # 激活虚拟环境
-    & "$env:WS\venv\scripts\activate.ps1"
+    & "$WS\venv\scripts\activate.ps1"
+
+    # python 代码
+    $PyScript = "train_resnet.py"
+    # 日志文件
+    $LogPath = "$WS\loggings\train_resnet.log"
 
     # 执行 Python 代码
-    # python log_stdout.py 3>&1 2>&1 >> "$env:WS\loggings\example_stdout.log"
-    python train_matcha.py 3>&1 2>&1 >> "$env:WS\loggings\example_stdout.log"
+    python $PyScript 3>&1 2>&1 >> $LogPath
 }
 
 function download-file {
     # get the latest json file
     $base_url = "http://20.163.99.216:8080"
     $url = "$base_url/download/ip/"
-    $env:WS = "E:\Xuke\kaggle\Benetech"
-    $output = "$env:WS\loggings\example_data.bak.json"
+    $WS = "E:\Xuke\kaggle\Benetech"
+    $output = "$WS\loggings\example_data.bak.json"
     Invoke-WebRequest -Uri $url -OutFile $output
 }
 
